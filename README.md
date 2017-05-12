@@ -68,4 +68,47 @@ print_hello函数，因此会执行print ‘ysf’
 hello
 ysf
 ```
+#### 编码与解码
+对于我这样的新手来说python2.x的编码解码问题真是个坑，什么decode，encode，好乱好乱，怎么办呢，还是得自己搞懂的，这个世界你能靠的只有自己。
+查了好多资料书籍，下面我试着来解释一下，有可能有些偏差，但是会好理解一点：
+
+当我们要向对方表达某种意思的时候，就会用文字（当然有其他方法）写下来，当对方看到文字的时候，就会明白我们要表达的意思。
+
+把要表达的意思写下来就是编码，对方看到文字后，会把通过眼睛接受的文字翻译成意思，然后就明白了要表达的东西，这就是解码
+
+对应到Python中，“意思”就是unicode，文字就是str，因为文字有中文，英文，西班牙语等等，所以str就会有utf-8，ascii等，
+
+因此unicode通过encode就会变成str，str通过decode就会变成unicode，一般我们以“utf-8”编码:unicode.encode('utf-8'),解码：str.decode('utf-8')
+
+那为什么我们经常会遇到UnicodeEncodError：'ascii'code can't encode characters in position...呢：
+这一般是发生在有中文的情况下，原因是当需要对str类型的字符串进行解码操作时，python会自动将其解码为unicode，而默认采用的是ascii来解码,举个例子：
+``` javascript 
+>>>a = u'hello' + 'ysf'
+>>>a
+u'helloysf'
+```
+这是在终端输入的代码，其中u‘hello’是unicode类型，‘ysf’是str类型，但是进行python在处理u'hello' + 'ysf'时却没有报错，最后还返回了u'helloysf'，这是为什么呢？原因就在于python内部先做了一步‘ysf’.decode('ascii'),将str类型解码成了unicode类型，这在没有中文的情况下是没错的，但是当有中文的时候，就有问题了，如下：
+``` javascript 
+>>>a = u'hello' + '中文'
+Traceback (most recent call last):
+  File "<input>", line 1, in <module>
+UnicodeEncodeError: 'ascii' codec can't encode characters in position 0-1: ordinal not in range(128) 
+```
+这是python在内部进行‘中文’.decode(‘ascii’）解码时出错了，因为ascii编码不包含中文，因此无法解码。按照如下方法改就不出错了
+``` javascript
+>>>a = u'hello' + '中文'.decode('utf-8')
+>>>a
+u'hello\u4e2d\u6587'
+```
+或者把系统默认编码方式改为‘utf-8’,如下，也就不会出错了
+``` javascript
+>>>import sys
+>>>reload(sys)
+<module 'sys' (built-in)>
+>>>sys.setdefaultencoding('utf-8')
+>>>a = u'hello' + '中文'
+>>>a
+u'hello\u4e2d\u6587'
+```
+最后在提一下，当源代码写在脚本文件中时，我们一般会用# -*- coding:utf-8 -*-去申明，而且要保存为utf-8编码，这样子Python解释器会按照‘utf-8’方式读取源代码，读取后，会转换为Unicode字符到内存里，编辑完成后，保存时在转换为‘utf-8’，因此如果要写入文件中，就要用encode（‘utf-8’）编码成utf-8类型。
 
